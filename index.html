@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Feature Explorer v3 · web</title>
+<link rel="stylesheet" href="potree/potree.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="topbar">
+  <h1>⬡ FEATURE EXPLORER <span class="ver">web</span></h1>
+  <span id="status">Loading…</span>
+  <div class="spacer"></div>
+</div>
+
+<div id="main">
+
+  <!-- ─── LEFT PANEL ─────────────────────────────────────────────── -->
+  <div id="left-panel">
+
+    <!-- Banks -->
+    <div class="panel-sec">
+      <div class="sec-title">Banks</div>
+      <div id="bank-list" class="bank-list">
+        <div class="muted">Loading banks…</div>
+      </div>
+    </div>
+
+    <!-- Color mode -->
+    <div class="panel-sec">
+      <div class="sec-title">Coloring</div>
+      <div id="mode-radios" class="mode-radios">
+        <label class="mode-radio"><input type="radio" name="mode" value="rgb" checked> <span>RGB (original)</span></label>
+        <label class="mode-radio"><input type="radio" name="mode" value="pca"> <span>PCA of bank features</span></label>
+        <label class="mode-radio"><input type="radio" name="mode" value="sim"> <span>Similarity query</span></label>
+      </div>
+    </div>
+
+    <!-- Similarity controls -->
+    <div class="panel-sec" id="sim-sec" style="display:none">
+      <div class="sec-title">Similarity</div>
+
+      <div class="sim-row">
+        <button id="btn-pick" class="btn">◎ Click a point: OFF</button>
+      </div>
+      <div class="sim-row">
+        <button id="btn-box" class="btn">▭ Box a region: OFF</button>
+      </div>
+      <div class="hint">Click toggles a single-point query · Box drags a screen rectangle to aggregate a region. Shift+drag also boxes.</div>
+
+      <!-- Text query (CLIP banks only — disabled in this DINO build) -->
+      <div id="text-wrap" class="text-wrap" style="display:none">
+        <div class="sec-sub">Text query <span class="badge clip">CLIP</span></div>
+        <div class="text-row">
+          <input id="inp-text" type="text" placeholder="e.g. red car, window, tree…" autocomplete="off">
+          <button id="btn-text" class="btn primary">→</button>
+        </div>
+      </div>
+
+      <!-- active query readout + threshold -->
+      <div id="query-wrap" style="display:none">
+        <div class="query-lbl" id="query-lbl">—</div>
+        <div class="thresh-row">
+          <span class="t-lbl">Dim</span>
+          <input id="sim-dim" type="range" min="0" max="99" value="35">
+          <span id="sim-dim-val">35%</span>
+        </div>
+        <button id="btn-clear-query" class="btn full">✕ Clear query</button>
+      </div>
+    </div>
+
+    <div class="grow"></div>
+    <div class="panel-foot muted" id="foot-info">—</div>
+  </div>
+
+  <!-- ─── CENTER (Potree) ───────────────────────────────────────── -->
+  <div id="center">
+    <div id="cloud-toolbar">
+      <span class="tb-lbl">Pt size</span>
+      <input id="cloud-pt-sz" type="range" min="1" max="20" value="4">
+      <div class="tb-sep"></div>
+      <button class="cloud-tb-btn" id="btn-fit" title="Fit view">⊡ Fit</button>
+      <div class="tb-sep"></div>
+      <span class="tb-lbl" id="active-bank-lbl">No bank</span>
+    </div>
+    <div id="cloud-canvas-wrap">
+      <div id="potree_render_area"></div>
+      <div id="potree_sidebar_container"></div>
+      <div id="box-sel" style="display:none"></div>
+      <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">Loading scene…</div>
+      </div>
+      <div id="cloud-hint">Left=orbit · Right/Middle=pan · Scroll=zoom</div>
+      <div id="pt-tooltip"></div>
+    </div>
+  </div>
+</div>
+
+<script src="libs/jquery/jquery-3.1.1.min.js"></script>
+<script src="libs/three.js/build/three.min.js"></script>
+<script src="libs/other/BinaryHeap.js"></script>
+<script src="libs/tween/tween.min.js"></script>
+<script src="libs/proj4/proj4.js"></script>
+<script src="potree/potree.js"></script>
+<script src="js/config.js"></script>
+<script src="js/viewer.js"></script>
+<script src="js/explore.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
