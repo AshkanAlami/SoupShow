@@ -1,69 +1,85 @@
-// ─── app.js — boot, scene load (static scene.json), UI wiring ─────────────────
-// No modal / no /api/init: we fetch ./scene.json, register banks, point Potree
-// at the (HF or local) tiles URL, and wire the panel. All compute is client-side.
+// ─── app.js — boot, scene picker (static scenes.json), UI wiring ──────────────
+// No modal / no /api/init: we fetch ./scenes.json (a manifest of scenes, each
+// with its own base url + a single bank), let the user switch scenes, point
+// Potree at the selected scene's tiles, and wire the panel. All compute is
+// client-side.
 
 (function () {
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
 
-  // ─── boot: load the static scene descriptor ─────────────────────────────────
-  setLoading('Loading scene…');
-  CONFIG.loadScene().then(function (scene) {
-    onProjectLoaded(scene);
+  APP.scenes = [];
+  APP.activeSceneIdx = -1;
+
+  // ─── boot: load the static scene manifest ───────────────────────────────────
+  setLoading('Loading scenes…');
+  CONFIG.loadScenes().then(function (scenes) {
+    onScenesLoaded(scenes);
   }).catch(function (e) {
-    setLoading('Failed to load scene.json: ' + e.message);
+    setLoading('Failed to load scenes.json: ' + e.message);
   });
 
-  function onProjectLoaded(scene) {
-    APP.banks = scene.banks;
-    APP.sentinel = scene.noise_sentinel || 65535;
-    // stamp each bank with its banks dir + register file names with EXPLORE
-    scene.banks.forEach(function (b) {
-      b._dir = scene.banks_dir;
-      EXPLORE.registerBank(b);
-    });
-    $('status').textContent = (scene.n_points ? scene.n_points.toLocaleString() + ' pts · ' : '') +
-      scene.banks.length + ' banks';
-    $('foot-info').textContent = scene.name + ' · base: ' + CONFIG.BASE;
-    renderBankList();
-    loadPointCloud(CONFIG.url(scene.tiles)).then(function () {
-      APP.tilesLoaded = true;
-      if (APP.banks.length) selectBank(0);
-    });
+  function onScenesLoaded(scenes) {
+    APP.scenes = scenes || [];
+    if (!APP.scenes.length) { setLoading('scenes.json has no scenes.'); return; }
+    renderSceneList();
+    selectScene(0);
   }
 
-  // ─── bank list ────────────────────────────────────────────────────────────
-  function renderBankList() {
-    var el = $('bank-list');
+  // ─── scene list ─────────────────────────────────────────────────────────────
+  function renderSceneList() {
+    var el = $('scene-list');
     el.innerHTML = '';
-    if (!APP.banks.length) { el.innerHTML = '<div class="muted">No banks.</div>'; return; }
-    APP.banks.forEach(function (b) {
+    APP.scenes.forEach(function (s, i) {
       var div = document.createElement('div');
-      div.className = 'bank-item';
-      div.dataset.idx = b.index;
+      div.className = 'scene-item';
+      div.dataset.idx = i;
       div.innerHTML =
-        '<span class="bk-name">' + b.name + '</span>' +
-        '<span class="badge ' + b.type + '">' + b.type + '</span>' +
-        '<span class="bk-meta">K=' + b.K + '</span>';
-      div.addEventListener('click', function () { selectBank(b.index); });
+        '<span class="sc-name">' + s.name + '</span>' +
+        '<span class="badge ' + s.bank.type + '">' + s.bank.type + '</span>' +
+        '<span class="sc-meta">K=' + s.bank.K + '</span>';
+      div.addEventListener('click', function () { selectScene(i); });
       el.appendChild(div);
     });
   }
 
-  function selectBank(idx) {
-    APP.activeBankIdx = idx;
-    var b = APP.banks[idx];
-    APP.activeAttr = b.attribute;
-    document.querySelectorAll('.bank-item').forEach(function (el) {
-      el.classList.toggle('active', +el.dataset.idx === idx);
+  // switch the active scene: flip base, (re)load tiles, activate its single bank
+  function selectScene(i) {
+    if (i === APP.activeSceneIdx) return;
+    APP.activeSceneIdx = i;
+    var s = APP.scenes[i];
+
+    CONFIG.setBase(s.base);
+    APP.sentinel = s.noise_sentinel || 65535;
+
+    // build the bank object (one per scene); index = scene idx for unique caches
+    var bank = {
+      index: i, name: s.bank.name, type: s.bank.type, attribute: s.bank.attribute,
+      K: s.bank.K, D: s.bank.D, centers: s.bank.centers, pca: s.bank.pca,
+    };
+    APP.banks = [bank];
+    APP.activeBankIdx = i;
+    APP.activeAttr = bank.attribute;
+    EXPLORE.registerBank(bank);
+
+    document.querySelectorAll('.scene-item').forEach(function (el) {
+      el.classList.toggle('active', +el.dataset.idx === i);
     });
-    $('active-bank-lbl').textContent = b.name + ' (' + b.type + ', K=' + b.K + ')';
-    // show/hide text query depending on bank type (CLIP only; not in this build)
-    $('text-wrap').style.display = (b.type === 'clip') ? '' : 'none';
-    EXPLORE.setActiveBank(b);
-    // warm the PCA cache so switching to PCA is instant
-    EXPLORE.prefetchPca(idx).catch(function () {});
+    $('status').textContent = (s.n_points ? s.n_points.toLocaleString() + ' pts · ' : '') +
+      s.bank.name;
+    $('foot-info').textContent = s.name + ' · base: ' + CONFIG.BASE;
+    $('active-bank-lbl').textContent = s.bank.name + ' (' + s.bank.type + ', K=' + s.bank.K + ')';
+
+    // EXPLORE re-applies the current color mode against the new bank
+    EXPLORE.setActiveBank(bank);
+    EXPLORE.prefetchPca(i).catch(function () {});
+
+    // (re)load the point cloud for this scene; loadPointCloud disposes the old one
+    APP.tilesLoaded = false;
+    loadPointCloud(CONFIG.url(s.tiles)).then(function () {
+      APP.tilesLoaded = true;
+    });
   }
 
   // ─── color mode radios ──────────────────────────────────────────────────────
@@ -81,30 +97,16 @@
     $('sim-sec').style.display = (mode === 'sim') ? '' : 'none';
   };
 
-  // ─── pick / box toggles ─────────────────────────────────────────────────────
-  var btnPick = $('btn-pick'), btnBox = $('btn-box');
+  // ─── pick toggle ────────────────────────────────────────────────────────────
+  var btnPick = $('btn-pick');
   function refreshToggles() {
     btnPick.textContent = '◎ Click a point: ' + (APP.pickMode ? 'ON' : 'OFF');
     btnPick.classList.toggle('active', APP.pickMode);
-    btnBox.textContent = '▭ Box a region: ' + (APP.boxMode ? 'ON' : 'OFF');
-    btnBox.classList.toggle('active', APP.boxMode);
-    renderArea.style.cursor = (APP.pickMode || APP.boxMode) ? 'crosshair' : 'default';
+    renderArea.style.cursor = APP.pickMode ? 'crosshair' : 'default';
   }
   btnPick.addEventListener('click', function () {
-    APP.pickMode = !APP.pickMode; if (APP.pickMode) APP.boxMode = false; refreshToggles();
+    APP.pickMode = !APP.pickMode; refreshToggles();
   });
-  btnBox.addEventListener('click', function () {
-    APP.boxMode = !APP.boxMode; if (APP.boxMode) APP.pickMode = false; refreshToggles();
-  });
-
-  // ─── text query (CLIP — disabled in the DINO static build) ──────────────────
-  function runText() {
-    var t = $('inp-text').value.trim();
-    if (!t) return;
-    EXPLORE.queryText(t);
-  }
-  $('btn-text').addEventListener('click', runText);
-  $('inp-text').addEventListener('keydown', function (e) { if (e.key === 'Enter') runText(); });
 
   // ─── query readout + dim slider ─────────────────────────────────────────────
   window.onQueryActive = function (label) {

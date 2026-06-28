@@ -154,7 +154,7 @@ window.EXPLORE = (function () {
   function _ensureCenters(bank) {
     if (_centersCache[bank]) return Promise.resolve(_centersCache[bank]);
     var f = _files[bank];
-    return CONFIG.fetchNpy(f.dir + '/' + f.centers).then(function (npy) {
+    return CONFIG.fetchNpy(f.centers).then(function (npy) {
       // L2-normalise rows so cosine similarity == dot product (the old server
       // normalised centers before both /centers and /sims).
       var data = npy.data, K = npy.shape[0], D = npy.shape[1];
@@ -171,7 +171,7 @@ window.EXPLORE = (function () {
   function _ensurePca(bank) {
     if (_pcaCache[bank]) return Promise.resolve(_pcaCache[bank]);
     var f = _files[bank];
-    return CONFIG.fetchBin(f.dir + '/' + f.pca).then(function (buf) {
+    return CONFIG.fetchBin(f.pca).then(function (buf) {
       _pcaCache[bank] = new Uint8Array(buf);
       return _pcaCache[bank];
     });
@@ -212,8 +212,9 @@ window.EXPLORE = (function () {
 
   // ─── public API ─────────────────────────────────────────────────────────────
   function registerBank(b) {
-    // b carries scene.json fields incl. centers/pca filenames + banks dir.
-    _files[b.index] = { dir: b._dir, centers: b.centers, pca: b.pca };
+    // b carries the scene's bank fields incl. centers/pca paths (relative to the
+    // scene base, e.g. "banks/vis_2048_centers.npy").
+    _files[b.index] = { centers: b.centers, pca: b.pca };
   }
 
   function setActiveBank(b) {
@@ -222,7 +223,8 @@ window.EXPLORE = (function () {
     _simsK = null;                       // similarity doesn't carry across banks
     if (window.onQueryCleared) window.onQueryCleared();
     if (_mode === 'pca') {
-      _ensurePca(_bank).then(function (p) { _pca = p; _repaint(); });
+      _ensurePca(_bank).then(function (p) { _pca = p; _repaint(); })
+        .catch(function () { showTooltip('No PCA for this scene — using RGB.'); _pca = null; _repaint(); });
     } else {
       _repaint();
     }
@@ -233,7 +235,8 @@ window.EXPLORE = (function () {
   function setMode(mode) {
     _mode = mode;
     if (mode === 'pca' && _bank >= 0) {
-      _ensurePca(_bank).then(function (p) { _pca = p; _repaint(); });
+      _ensurePca(_bank).then(function (p) { _pca = p; _repaint(); })
+        .catch(function () { showTooltip('No PCA file for this scene.'); _pca = null; _repaint(); });
     } else {
       _repaint();
     }

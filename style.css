@@ -66,16 +66,16 @@ html, body {
 .panel-foot { padding: 10px 14px; }
 
 /* ─── Banks list ─── */
-.bank-list { display: flex; flex-direction: column; gap: 5px; }
-.bank-item {
+.scene-list { display: flex; flex-direction: column; gap: 5px; }
+.scene-item {
   display: flex; align-items: center; gap: 8px;
   padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px;
   cursor: pointer; background: var(--panel-2); transition: border-color .12s;
 }
-.bank-item:hover { border-color: #3a3a52; }
-.bank-item.active { border-color: var(--teal); background: #16322f; }
-.bank-item .bk-name { flex: 1; font-size: 12px; }
-.bank-item .bk-meta { font-size: 9px; color: var(--dim); }
+.scene-item:hover { border-color: #3a3a52; }
+.scene-item.active { border-color: var(--teal); background: #16322f; }
+.scene-item .sc-name { flex: 1; font-size: 12px; }
+.scene-item .sc-meta { font-size: 9px; color: var(--dim); }
 .badge {
   font-size: 8px; letter-spacing: .5px; padding: 1px 5px; border-radius: 4px;
   text-transform: uppercase; font-weight: 700;
@@ -123,11 +123,6 @@ html, body {
 
 #cloud-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
 #potree_render_area { position: absolute; inset: 0; }
-#box-sel {
-  position: absolute; border: 2px dashed var(--accent);
-  background: rgba(167,139,250,.10); pointer-events: none; z-index: 9999;
-}
-
 #cloud-hint {
   position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
   font-size: 10px; color: var(--muted); background: rgba(13,13,26,.7);

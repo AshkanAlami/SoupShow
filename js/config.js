@@ -1,33 +1,34 @@
-// ─── config.js — static scene config + base-URL resolution + .npy parsing ─────
-// Replaces the old server's /api/init. The frontend loads ./scene.json (written
-// by tools/prepare_scene.py) and prepends a BASE url to every data path:
+// ─── config.js — multi-scene config + base-URL resolution + .npy parsing ──────
+// Replaces the old server's /api/init. The frontend loads ./scenes.json (a small
+// manifest listing every scene) and each scene carries its own BASE url that all
+// of its data paths (tiles, centers, pca) resolve against:
 //
-//   • local dev : BASE = "/data"  (tools/serve.py mounts the scene dir there)
 //   • production: BASE = the HuggingFace dataset resolve URL, e.g.
-//       https://huggingface.co/datasets/<user>/<repo>/resolve/main/Graz_new_big
+//       https://huggingface.co/datasets/<user>/<repo>/resolve/main/<scene>
+//   • local dev : BASE = "/data"  (tools/serve.py mounts a scene dir there)
 //
-// Override the base at runtime with ?base=<url> — handy for flipping between a
-// local copy and HF without re-deploying. Everything else (tiles, centers, pca,
-// sims) is static files + browser math; there is no backend.
+// One scene is active at a time, so we keep a single mutable BASE that the app
+// flips with setBase() on scene switch. Override every scene's base at runtime
+// with ?base=<url> — handy for flipping between a local copy and HF without
+// re-deploying. Everything else is static files + browser math; no backend.
 
 window.CONFIG = (function () {
   'use strict';
 
   var params = new URLSearchParams(location.search);
-  // default base: local dev server mount. Flip to HF via ?base=… or by editing
-  // DEFAULT_BASE before deploying.
-  var DEFAULT_BASE = 'https://huggingface.co/datasets/Ashkan126/q3dgrz/resolve/main';
-  // var DEFAULT_BASE = '/data';
-  var BASE = (params.get('base') || DEFAULT_BASE).replace(/\/+$/, '');
+  var OVERRIDE = params.get('base');             // forces base for ALL scenes
+  var BASE = '';                                 // current scene's base (mutable)
+
+  function setBase(b) { BASE = (OVERRIDE || b || '').replace(/\/+$/, ''); }
 
   function url(rel) { return BASE + '/' + String(rel).replace(/^\/+/, ''); }
 
-  function loadScene() {
-    // scene.json ships WITH the frontend (small), data lives under BASE.
-    return fetch('scene.json').then(function (r) {
-      if (!r.ok) throw new Error('scene.json ' + r.status);
+  function loadScenes() {
+    // scenes.json ships WITH the frontend (small), data lives under each base.
+    return fetch('scenes.json').then(function (r) {
+      if (!r.ok) throw new Error('scenes.json ' + r.status);
       return r.json();
-    });
+    }).then(function (j) { return j.scenes || []; });
   }
 
   // ─── minimal .npy reader (little-endian <f4 / <f8, C-order) ─────────────────
@@ -71,9 +72,10 @@ window.CONFIG = (function () {
   }
 
   return {
-    BASE: BASE,
+    get BASE() { return BASE; },
+    setBase: setBase,
     url: url,
-    loadScene: loadScene,
+    loadScenes: loadScenes,
     fetchNpy: fetchNpy,
     fetchBin: fetchBin,
   };

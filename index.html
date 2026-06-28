@@ -19,11 +19,11 @@
   <!-- ─── LEFT PANEL ─────────────────────────────────────────────── -->
   <div id="left-panel">
 
-    <!-- Banks -->
+    <!-- Scenes -->
     <div class="panel-sec">
-      <div class="sec-title">Banks</div>
-      <div id="bank-list" class="bank-list">
-        <div class="muted">Loading banks…</div>
+      <div class="sec-title">Scenes</div>
+      <div id="scene-list" class="scene-list">
+        <div class="muted">Loading scenes…</div>
       </div>
     </div>
 
@@ -44,10 +44,7 @@
       <div class="sim-row">
         <button id="btn-pick" class="btn">◎ Click a point: OFF</button>
       </div>
-      <div class="sim-row">
-        <button id="btn-box" class="btn">▭ Box a region: OFF</button>
-      </div>
-      <div class="hint">Click toggles a single-point query · Box drags a screen rectangle to aggregate a region. Shift+drag also boxes.</div>
+      <div class="hint">Toggle on, then click a point to color the cloud by similarity to that point's cluster.</div>
 
       <!-- Text query (CLIP banks only — disabled in this DINO build) -->
       <div id="text-wrap" class="text-wrap" style="display:none">
@@ -87,7 +84,6 @@
     <div id="cloud-canvas-wrap">
       <div id="potree_render_area"></div>
       <div id="potree_sidebar_container"></div>
-      <div id="box-sel" style="display:none"></div>
       <div id="loading-overlay">
         <div class="spinner"></div>
         <div id="loading-text">Loading scene…</div>
