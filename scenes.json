@@ -61,7 +61,7 @@
       "bank": {
         "name": "DINO 8192",
         "type": "dino",
-        "attribute": "cidx0",
+        "attribute": "cidx4",
         "K": 8192,
         "D": 1280,
         "centers": "banks/vis_8192_centers.npy",
