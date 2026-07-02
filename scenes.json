@@ -2,88 +2,101 @@
   "scenes": [
     {
       "id": "graz",
-      "name": "Graz · DINO 8192",
+      "name": "Graz",
       "base": "https://huggingface.co/datasets/Ashkan126/q3dgrz/resolve/main",
       "tiles": "tiles/metadata.json",
       "n_points": 262979391,
       "noise_sentinel": 65535,
-      "bank": {
-        "name": "DINO 8192",
-        "type": "dino",
-        "attribute": "cidx4",
-        "K": 8192,
-        "D": 1280,
-        "centers": "banks/vis_8192_centers.npy",
-        "pca": "banks/vis_8192_pca.bin"
-      }
+      "banks":  [
+    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
+      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
+    { "name": "DINO 1024", "type": "dino", "attribute": "cidx1", "K": 1024, "D": 1280,
+      "centers": "banks/vis_1024_centers.npy", "pca": "banks/vis_1024_pca.bin" },
+    { "name": "DINO 2048", "type": "dino", "attribute": "cidx2", "K": 2048, "D": 1280,
+      "centers": "banks/vis_2048_centers.npy", "pca": "banks/vis_2048_pca.bin" },
+    { "name": "DINO 4096", "type": "dino", "attribute": "cidx3", "K": 4096, "D": 1280,
+      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
+    { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
+      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }]
     },
     {
       "id": "RA",
-      "name": "RA · DINO 8192",
+      "name": "RA",
       "base": "https://huggingface.co/datasets/Ashkan126/q3dRA/resolve/main/RA",
       "tiles": "tiles/metadata.json",
       "n_points": 6825065,
       "noise_sentinel": 65535,
-      "bank": {
-        "name": "DINO 8192",
-        "type": "dino",
-        "attribute": "cidx4",
-        "K": 8192,
-        "D": 1280,
-        "centers": "banks/vis_8192_centers.npy",
-        "pca": "banks/vis_8192_pca.bin"
-      }
+      "banks":  [
+    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
+      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
+    { "name": "DINO 1024", "type": "dino", "attribute": "cidx1", "K": 1024, "D": 1280,
+      "centers": "banks/vis_1024_centers.npy", "pca": "banks/vis_1024_pca.bin" },
+    { "name": "DINO 2048", "type": "dino", "attribute": "cidx2", "K": 2048, "D": 1280,
+      "centers": "banks/vis_2048_centers.npy", "pca": "banks/vis_2048_pca.bin" },
+    { "name": "DINO 4096", "type": "dino", "attribute": "cidx3", "K": 4096, "D": 1280,
+      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
+    { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
+      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }]
+
     },
     {
       "id": "wmcs",
-      "name": "WMCS · DINO 8192",
+      "name": "WMCS",
       "base": "https://huggingface.co/datasets/Ashkan126/q3dwmcs/resolve/main/wmcs",
       "tiles": "tiles/metadata.json",
       "n_points": 9977764,
       "noise_sentinel": 65535,
-      "bank": {
-        "name": "DINO 8192",
-        "type": "dino",
-        "attribute": "cidx4",
-        "K": 8192,
-        "D": 1280,
-        "centers": "banks/vis_8192_centers.npy",
-        "pca": "banks/vis_8192_pca.bin"
-      }
+      "banks":  [
+    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
+      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
+    { "name": "DINO 1024", "type": "dino", "attribute": "cidx1", "K": 1024, "D": 1280,
+      "centers": "banks/vis_1024_centers.npy", "pca": "banks/vis_1024_pca.bin" },
+    { "name": "DINO 2048", "type": "dino", "attribute": "cidx2", "K": 2048, "D": 1280,
+      "centers": "banks/vis_2048_centers.npy", "pca": "banks/vis_2048_pca.bin" },
+    { "name": "DINO 4096", "type": "dino", "attribute": "cidx3", "K": 4096, "D": 1280,
+      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
+    { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
+      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }]
     },
     {
       "id": "usc",
-      "name": "USC · DINO 8192",
+      "name": "USC",
       "base": "https://huggingface.co/datasets/Ashkan126/q3dusc/resolve/main/usc",
       "tiles": "tiles/metadata.json",
       "n_points": 94694849,
       "noise_sentinel": 65535,
-      "bank": {
-        "name": "DINO 8192",
-        "type": "dino",
-        "attribute": "cidx4",
-        "K": 8192,
-        "D": 1280,
-        "centers": "banks/vis_8192_centers.npy",
-        "pca": "banks/vis_8192_pca.bin"
-      }
+      "banks":  [
+    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
+      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
+    { "name": "DINO 1024", "type": "dino", "attribute": "cidx1", "K": 1024, "D": 1280,
+      "centers": "banks/vis_1024_centers.npy", "pca": "banks/vis_1024_pca.bin" },
+    { "name": "DINO 2048", "type": "dino", "attribute": "cidx2", "K": 2048, "D": 1280,
+      "centers": "banks/vis_2048_centers.npy", "pca": "banks/vis_2048_pca.bin" },
+    { "name": "DINO 4096", "type": "dino", "attribute": "cidx3", "K": 4096, "D": 1280,
+      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
+    { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
+      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }
+  ]
     },
     {
       "id": "paestum",
-      "name": "Paestum · DINO 1024",
+      "name": "Paestum",
       "base": "https://huggingface.co/datasets/Ashkan126/q3dpaestum/resolve/main/paestum",
       "tiles": "tiles/metadata.json",
       "n_points": 2571534,
       "noise_sentinel": 65535,
-      "bank": {
-        "name": "DINO 1024",
-        "type": "dino",
-        "attribute": "cidx1",
-        "K": 1024,
-        "D": 1280,
-        "centers": "banks/vis_1024_centers.npy",
-        "pca": "banks/vis_1024_pca.bin"
-      }
+      "banks":  [
+    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
+      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
+    { "name": "DINO 1024", "type": "dino", "attribute": "cidx1", "K": 1024, "D": 1280,
+      "centers": "banks/vis_1024_centers.npy", "pca": "banks/vis_1024_pca.bin" },
+    { "name": "DINO 2048", "type": "dino", "attribute": "cidx2", "K": 2048, "D": 1280,
+      "centers": "banks/vis_2048_centers.npy", "pca": "banks/vis_2048_pca.bin" },
+    { "name": "DINO 4096", "type": "dino", "attribute": "cidx3", "K": 4096, "D": 1280,
+      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
+    { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
+      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }]
     }
   ]
 }
+

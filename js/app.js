@@ -27,24 +27,58 @@
     selectScene(0);
   }
 
+  // a scene declares either a single `bank` (object) or several `banks` (array,
+  // different K to explore). Normalise both to an array.
+  function bankDefs(s) {
+    return (s.banks && s.banks.length) ? s.banks : (s.bank ? [s.bank] : []);
+  }
+
   // ─── scene list ─────────────────────────────────────────────────────────────
+  // Each scene is a row; a multi-bank scene also carries an inline K-picker that
+  // only shows while that scene is active (CSS: .scene-item.active .bank-options).
   function renderSceneList() {
     var el = $('scene-list');
     el.innerHTML = '';
     APP.scenes.forEach(function (s, i) {
+      var defs = bankDefs(s), b0 = defs[0] || {};
       var div = document.createElement('div');
       div.className = 'scene-item';
       div.dataset.idx = i;
-      div.innerHTML =
+
+      var head = document.createElement('div');
+      head.className = 'sc-head';
+      head.innerHTML =
         '<span class="sc-name">' + s.name + '</span>' +
-        '<span class="badge ' + s.bank.type + '">' + s.bank.type + '</span>' +
-        '<span class="sc-meta">K=' + s.bank.K + '</span>';
-      div.addEventListener('click', function () { selectScene(i); });
+        '<span class="badge ' + b0.type + '">' + b0.type + '</span>';
+      head.addEventListener('click', function () { selectScene(i); });
+      div.appendChild(head);
+
+      if (defs.length > 1) {
+        var opts = document.createElement('div');
+        opts.className = 'bank-options';
+        opts.innerHTML = '<span class="bank-lbl">K</span>';
+        defs.forEach(function (b, j) {
+          var btn = document.createElement('button');
+          btn.className = 'bank-opt';
+          btn.dataset.pos = j;
+          btn.textContent = b.K;
+          btn.title = b.name + ' · K=' + b.K;
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (i !== APP.activeSceneIdx) selectScene(i);   // sets bank 0 first
+            selectBank(j);
+          });
+          opts.appendChild(btn);
+        });
+        div.appendChild(opts);
+      }
       el.appendChild(div);
     });
   }
 
-  // switch the active scene: flip base, (re)load tiles, activate its single bank
+  // switch the active scene: flip base, (re)load tiles once, then activate a bank.
+  // The octree carries every cidxN attribute, so switching K below never reloads
+  // tiles — only the active bank's centers/pca differ.
   function selectScene(i) {
     if (i === APP.activeSceneIdx) return;
     APP.activeSceneIdx = i;
@@ -53,33 +87,48 @@
     CONFIG.setBase(s.base);
     APP.sentinel = s.noise_sentinel || 65535;
 
-    // build the bank object (one per scene); index = scene idx for unique caches
-    var bank = {
-      index: i, name: s.bank.name, type: s.bank.type, attribute: s.bank.attribute,
-      K: s.bank.K, D: s.bank.D, centers: s.bank.centers, pca: s.bank.pca,
-    };
-    APP.banks = [bank];
-    APP.activeBankIdx = i;
-    APP.activeAttr = bank.attribute;
-    EXPLORE.registerBank(bank);
+    // build one bank object per declared bank; a globally-unique index keeps each
+    // bank's EXPLORE caches (centers/pca) separate across scenes and K values.
+    APP.banks = bankDefs(s).map(function (b, j) {
+      return {
+        index: i * 1000 + j, sceneIdx: i, pos: j,
+        name: b.name, type: b.type, attribute: b.attribute,
+        K: b.K, D: b.D, centers: b.centers, pca: b.pca,
+      };
+    });
+    APP.banks.forEach(function (b) { EXPLORE.registerBank(b); });
 
     document.querySelectorAll('.scene-item').forEach(function (el) {
       el.classList.toggle('active', +el.dataset.idx === i);
     });
-    $('status').textContent = (s.n_points ? s.n_points.toLocaleString() + ' pts · ' : '') +
-      s.bank.name;
+    $('status').textContent = (s.n_points ? s.n_points.toLocaleString() + ' pts · ' : '') + s.name;
     $('foot-info').textContent = s.name + ' · base: ' + CONFIG.BASE;
-    $('active-bank-lbl').textContent = s.bank.name + ' (' + s.bank.type + ', K=' + s.bank.K + ')';
-
-    // EXPLORE re-applies the current color mode against the new bank
-    EXPLORE.setActiveBank(bank);
-    EXPLORE.prefetchPca(i).catch(function () {});
 
     // (re)load the point cloud for this scene; loadPointCloud disposes the old one
     APP.tilesLoaded = false;
     loadPointCloud(CONFIG.url(s.tiles)).then(function () {
       APP.tilesLoaded = true;
     });
+
+    selectBank(0);
+  }
+
+  // ─── bank (K) switch — swaps the active cluster bank without reloading tiles ──
+  function selectBank(j) {
+    var bank = APP.banks[j];
+    if (!bank) return;
+    APP.activeBankIdx = bank.index;
+    APP.activeBankPos = j;
+    APP.activeAttr = bank.attribute;
+    $('active-bank-lbl').textContent = bank.name + ' (' + bank.type + ', K=' + bank.K + ')';
+    // highlight the picked K in the active scene's inline picker
+    var active = document.querySelector('.scene-item.active');
+    if (active) active.querySelectorAll('.bank-opt').forEach(function (b) {
+      b.classList.toggle('active', +b.dataset.pos === j);
+    });
+    // EXPLORE re-applies the current color mode against the new bank
+    EXPLORE.setActiveBank(bank);
+    EXPLORE.prefetchPca(bank.index).catch(function () {});
   }
 
   // ─── color mode radios ──────────────────────────────────────────────────────
