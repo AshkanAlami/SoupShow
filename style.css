@@ -106,6 +106,11 @@ html, body {
 .badge.dino { background: #243; color: #7fe3a0; }
 .badge.clip { background: #234; color: #7fbfe3; }
 
+/* per-type bank rows: DINO row on top, CLIP row below */
+.bank-options .bank-lbl.dino { color: #7fe3a0; }
+.bank-options .bank-lbl.clip { color: #7fbfe3; }
+.bank-opt.clip.active { background: #7fbfe3; }
+
 /* ─── Color mode radios ─── */
 .mode-radios, .sim-row { display: flex; flex-direction: column; gap: 7px; }
 .mode-radio { display: flex; align-items: center; gap: 7px; font-size: 12px; cursor: pointer; }

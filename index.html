@@ -37,6 +37,16 @@
       </div>
     </div>
 
+    <!-- Text query (shown only when a CLIP bank is active) -->
+    <div class="panel-sec" id="text-sec" style="display:none">
+      <div class="sec-title">Text query <span class="badge clip">CLIP</span></div>
+      <div class="text-row">
+        <input id="inp-text" type="text" placeholder="e.g. road, roof, tree, car…" autocomplete="off">
+        <button id="btn-text" class="btn primary">→</button>
+      </div>
+      <div class="hint">Type a concept to color the cloud by CLIP similarity. First query downloads the text model once (cached after).</div>
+    </div>
+
     <!-- Similarity controls -->
     <div class="panel-sec" id="sim-sec" style="display:none">
       <div class="sec-title">Similarity</div>
@@ -45,15 +55,6 @@
         <button id="btn-pick" class="btn">◎ Click a point: OFF</button>
       </div>
       <div class="hint">Toggle on, then click a point to color the cloud by similarity to that point's cluster.</div>
-
-      <!-- Text query (CLIP banks only — disabled in this DINO build) -->
-      <div id="text-wrap" class="text-wrap" style="display:none">
-        <div class="sec-sub">Text query <span class="badge clip">CLIP</span></div>
-        <div class="text-row">
-          <input id="inp-text" type="text" placeholder="e.g. red car, window, tree…" autocomplete="off">
-          <button id="btn-text" class="btn primary">→</button>
-        </div>
-      </div>
 
       <!-- active query readout + threshold -->
       <div id="query-wrap" style="display:none">

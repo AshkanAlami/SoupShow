@@ -16,6 +16,12 @@ window.EXPLORE = (function () {
   var _attr = null;        // active cidx attribute name
   var _K = 0, _D = 0;
   var _sentinel = 65535;
+  var _type = 'dino';       // active bank feature type ('dino' | 'clip')
+  var _clipModel = null;    // active bank's HF text model id (clip banks only)
+
+  // lazy-loaded CLIP text towers, keyed by HF model id (browser-cached weights)
+  var _clip = {};           // modelId -> {tok, model}
+  var _clipPromise = {};    // modelId -> in-flight Promise
 
   // per-bank file names (filled as banks are registered) + caches
   var _files = {};          // {bank: {dir, centers, pca}}
@@ -43,7 +49,8 @@ window.EXPLORE = (function () {
     [0.969, 0.560, 0.118], [0.988, 0.808, 0.145], [0.988, 0.998, 0.645],
   ];
   function _heat(t) {
-    var s = Math.min(0.9999, Math.max(0, t)) * (HEAT.length - 1);
+    if (!(t >= 0)) t = 0; else if (t > 0.9999) t = 0.9999;   // NaN-safe clamp
+    var s = t * (HEAT.length - 1);
     var i = Math.floor(s), f = s - i, a = HEAT[i], b = HEAT[i + 1];
     return [a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f, a[2] + (b[2]-a[2])*f];
   }
@@ -72,7 +79,8 @@ window.EXPLORE = (function () {
       var sMin = _simMin, sRng = Math.max(0.0001, _simMax - _simMin);
       for (var j = 0; j < N; j++) {
         var cj = cidxAttr.getX(j);
-        var t = (cj === _sentinel || cj >= _K) ? -1 : (_simsK[cj] - sMin) / sRng;
+        var sv = (cj === _sentinel || cj < 0 || cj >= _K) ? NaN : _simsK[cj];
+        var t = (sv === sv) ? (sv - sMin) / sRng : -1;   // sv!==sv ⇒ NaN/undefined
         if (t < thr) {
           rgba[j*4]=0; rgba[j*4+1]=0; rgba[j*4+2]=0; rgba[j*4+3]=255;
         } else {
@@ -219,6 +227,7 @@ window.EXPLORE = (function () {
 
   function setActiveBank(b) {
     _bank = b.index; _attr = b.attribute; _K = b.K; _D = b.D;
+    _type = b.type || 'dino'; _clipModel = b.clip_model || null;
     _pca = _pcaCache[_bank] || null;
     _simsK = null;                       // similarity doesn't carry across banks
     if (window.onQueryCleared) window.onQueryCleared();
@@ -263,10 +272,85 @@ window.EXPLORE = (function () {
     }).catch(function (e) { showTooltip('Query error: ' + e.message); });
   }
 
-  // text (CLIP banks) — not in the static DINO build yet (added later via
-  // browser Transformers.js). DINO banks hide the text box, so this is inert.
+  // ─── CLIP text tower (lazy, Transformers.js from CDN, weights from HF hub) ───
+  // Only loaded the first time a text query runs, so DINO-only visits stay light.
+  function _ensureClip(modelId) {
+    if (_clip[modelId]) return Promise.resolve(_clip[modelId]);
+    if (_clipPromise[modelId]) return _clipPromise[modelId];
+    var p = import('https://cdn.jsdelivr.net/npm/@huggingface/transformers').then(function (T) {
+      T.env.allowRemoteModels = true;      // stream weights from the HF hub CDN
+      T.env.allowLocalModels = false;
+      T.env.backends.onnx.wasm.numThreads = 1;
+      showTooltip('Loading CLIP text model…');
+      return Promise.all([
+        T.AutoTokenizer.from_pretrained(modelId),
+        T.CLIPTextModelWithProjection.from_pretrained(modelId, {
+          quantized: true,
+          progress_callback: function (pr) {
+            if (pr && pr.status === 'downloading' && pr.total) {
+              var mb = (pr.total / 1e6).toFixed(0);
+              var pct = pr.progress != null ? ' ' + Math.round(pr.progress) + '%' : '';
+              showTooltip('Downloading CLIP (' + mb + ' MB)' + pct + ' — one time, then cached');
+            }
+          },
+        }),
+      ]).then(function (arr) {
+        _clip[modelId] = { tok: arr[0], model: arr[1] };
+        return _clip[modelId];
+      });
+    });
+    _clipPromise[modelId] = p;
+    p.catch(function () { delete _clipPromise[modelId]; });   // allow retry on failure
+    return p;
+  }
+
+  // text (CLIP banks): encode the query with the CLIP text tower, cosine against
+  // the active bank's centers → sims_k[K], then reuse the sim heatmap machinery.
   function queryText(text) {
-    showTooltip('Text query needs a CLIP bank (coming soon).');
+    if (_bank < 0) { showTooltip('Load a scene first.'); return; }
+    if (_type !== 'clip') { showTooltip('Select a CLIP bank to use text query.'); return; }
+    text = (text || '').trim();
+    if (!text) return;
+    var modelId = _clipModel || 'Xenova/clip-vit-large-patch14';
+    var bank = _bank;
+    showTooltip('Encoding “' + text + '”…');
+    Promise.all([_ensureClip(modelId), _ensureCenters(bank)]).then(function (res) {
+      var clip = res[0], centers = res[1];
+      var inputs = clip.tok([text], { padding: true, truncation: true });
+      return clip.model(inputs).then(function (out) {
+        var raw = out.text_embeds.data;              // Float32Array [D]
+        var data = centers.data, K = centers.K, D = centers.D;
+        if (raw.length !== D) {
+          showTooltip('Text dim ' + raw.length + ' ≠ bank dim ' + D +
+                      ' — CLIP model doesn’t match these features.');
+          return;
+        }
+        // L2-normalise the query so cosine == dot (centers are already normalised)
+        var q = new Float32Array(D), rawNorm = 0, d;
+        for (d = 0; d < D; d++) { var v = raw[d]; rawNorm += v * v; }
+        rawNorm = Math.sqrt(rawNorm);
+        var n = 1 / (rawNorm + 1e-8);
+        for (d = 0; d < D; d++) q[d] = raw[d] * n;
+
+        var sims = new Float32Array(K), mn = Infinity, mx = -Infinity, nan = 0;
+        for (var k = 0; k < K; k++) {
+          var kb = k * D, dot = 0;
+          for (var dd = 0; dd < D; dd++) dot += data[kb + dd] * q[dd];
+          sims[k] = dot;
+          if (dot !== dot) nan++;
+          if (dot < mn) mn = dot;
+          if (dot > mx) mx = dot;
+        }
+        console.log('[queryText]', text, '| D', D, 'K', K,
+          '| rawNorm', rawNorm.toFixed(4), '| sims', mn.toFixed(3), '..', mx.toFixed(3),
+          '| NaN', nan, '| raw[0..3]', raw[0], raw[1], raw[2]);
+        if (nan === K || !(rawNorm > 0)) {
+          showTooltip('CLIP embedding looks empty (norm ' + rawNorm.toFixed(3) +
+            ') — model/output mismatch.'); return;
+        }
+        _activateSims(sims, mn, mx, '“' + text + '”');
+      });
+    }).catch(function (e) { showTooltip('Text query error: ' + e.message); });
   }
 
   function clearQuery() {

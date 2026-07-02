@@ -71,6 +71,19 @@ function loadPointCloud(tilesUrl) {
 function fitView() { viewer.fitToScreen(); }
 function setPointSize(sz) { if (pointcloud) pointcloud.material.size = sz; }
 
+// Does the loaded octree actually carry this per-point attribute (e.g. "cidx5")?
+// Returns null if we can't tell yet (tiles not loaded). Used to warn when a bank
+// references a cidx column that was never baked into the uploaded tiles.
+function cloudHasAttribute(name) {
+  try {
+    var attrs = pointcloud && pointcloud.pcoGeometry &&
+      pointcloud.pcoGeometry.pointAttributes &&
+      pointcloud.pcoGeometry.pointAttributes.attributes;
+    if (!attrs) return null;
+    return attrs.some(function (a) { return a.name === name; });
+  } catch (e) { return null; }
+}
+
 function highlightPoint(xyz) {
   if (highlightObject) {
     scene.remove(highlightObject);

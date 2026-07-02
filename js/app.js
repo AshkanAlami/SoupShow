@@ -54,23 +54,38 @@
       div.appendChild(head);
 
       if (defs.length > 1) {
-        var opts = document.createElement('div');
-        opts.className = 'bank-options';
-        opts.innerHTML = '<span class="bank-lbl">K</span>';
+        // one labeled row per feature type: DINO on top, CLIP below. Each button's
+        // dataset.pos is the bank's ORIGINAL index in defs so selectBank(j) matches.
+        var order = ['dino', 'clip'];
+        var byType = {};
         defs.forEach(function (b, j) {
-          var btn = document.createElement('button');
-          btn.className = 'bank-opt';
-          btn.dataset.pos = j;
-          btn.textContent = b.K;
-          btn.title = b.name + ' · K=' + b.K;
-          btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (i !== APP.activeSceneIdx) selectScene(i);   // sets bank 0 first
-            selectBank(j);
-          });
-          opts.appendChild(btn);
+          var t = b.type || 'dino';
+          (byType[t] = byType[t] || []).push({ b: b, j: j });
         });
-        div.appendChild(opts);
+        Object.keys(byType).forEach(function (t) {
+          if (order.indexOf(t) < 0) order.push(t);   // any unknown type after
+        });
+        order.forEach(function (t) {
+          var group = byType[t];
+          if (!group) return;
+          var opts = document.createElement('div');
+          opts.className = 'bank-options';
+          opts.innerHTML = '<span class="bank-lbl ' + t + '">' + t.toUpperCase() + '</span>';
+          group.forEach(function (g) {
+            var btn = document.createElement('button');
+            btn.className = 'bank-opt ' + t;
+            btn.dataset.pos = g.j;
+            btn.textContent = g.b.K;
+            btn.title = g.b.name + ' · ' + t + ' · K=' + g.b.K;
+            btn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              if (i !== APP.activeSceneIdx) selectScene(i);   // sets bank 0 first
+              selectBank(g.j);
+            });
+            opts.appendChild(btn);
+          });
+          div.appendChild(opts);
+        });
       }
       el.appendChild(div);
     });
@@ -94,6 +109,7 @@
         index: i * 1000 + j, sceneIdx: i, pos: j,
         name: b.name, type: b.type, attribute: b.attribute,
         K: b.K, D: b.D, centers: b.centers, pca: b.pca,
+        clip_model: b.clip_model || s.clip_model || null,
       };
     });
     APP.banks.forEach(function (b) { EXPLORE.registerBank(b); });
@@ -108,9 +124,23 @@
     APP.tilesLoaded = false;
     loadPointCloud(CONFIG.url(s.tiles)).then(function () {
       APP.tilesLoaded = true;
+      warnIfAttrMissing();   // now that attributes are known, validate active bank
     });
 
     selectBank(0);
+  }
+
+  // Warn if the active bank's cidx column isn't actually baked into these tiles
+  // (the #1 cause of "PCA/similarity/clip does nothing"): the octree was never
+  // re-tiled with that attribute, or scenes.json points at the wrong cidx index.
+  function warnIfAttrMissing() {
+    var bank = APP.banks[APP.activeBankPos];
+    if (!bank) return;
+    var has = cloudHasAttribute(bank.attribute);
+    if (has === false) {
+      showTooltip('⚠ "' + bank.attribute + '" is not in these tiles — this ' +
+        bank.type.toUpperCase() + ' bank needs the octree re-tiled with that column.');
+    }
   }
 
   // ─── bank (K) switch — swaps the active cluster bank without reloading tiles ──
@@ -121,6 +151,8 @@
     APP.activeBankPos = j;
     APP.activeAttr = bank.attribute;
     $('active-bank-lbl').textContent = bank.name + ' (' + bank.type + ', K=' + bank.K + ')';
+    // reveal the text-query panel only for CLIP banks
+    $('text-sec').style.display = (bank.type === 'clip') ? '' : 'none';
     // highlight the picked K in the active scene's inline picker
     var active = document.querySelector('.scene-item.active');
     if (active) active.querySelectorAll('.bank-opt').forEach(function (b) {
@@ -129,6 +161,7 @@
     // EXPLORE re-applies the current color mode against the new bank
     EXPLORE.setActiveBank(bank);
     EXPLORE.prefetchPca(bank.index).catch(function () {});
+    if (APP.tilesLoaded) warnIfAttrMissing();
   }
 
   // ─── color mode radios ──────────────────────────────────────────────────────
@@ -171,6 +204,14 @@
     EXPLORE.setDim(parseInt(e.target.value, 10));
   });
   $('btn-clear-query').addEventListener('click', function () { EXPLORE.clearQuery(); });
+
+  // ─── text query (CLIP banks) ────────────────────────────────────────────────
+  $('btn-text').addEventListener('click', function () {
+    EXPLORE.queryText($('inp-text').value);
+  });
+  $('inp-text').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); EXPLORE.queryText(this.value); }
+  });
 
   // ─── toolbar: point size + fit ──────────────────────────────────────────────
   $('cloud-pt-sz').addEventListener('input', function (e) {
