@@ -67,7 +67,41 @@
   { "name": "OpenSeg 8192", "type": "clip", "attribute": "cidx9", "K": 8192, "D": 768,
   "clip_model": "Xenova/clip-vit-large-patch14",
   "centers": "banks/openseg_8192_centers.npy", "pca": "banks/openseg_8192_pca.bin" }]
-
+    },
+   {
+      "id": "usc",
+      "name": "USC",
+      "base": "https://huggingface.co/datasets/Ashkan126/q3dusc/resolve/main/usc",
+      "tiles": "tiles/metadata.json",
+      "n_points": 94694849,
+      "noise_sentinel": 65535,
+      "banks":  [
+    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
+      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
+    { "name": "DINO 1024", "type": "dino", "attribute": "cidx1", "K": 1024, "D": 1280,
+      "centers": "banks/vis_1024_centers.npy", "pca": "banks/vis_1024_pca.bin" },
+    { "name": "DINO 2048", "type": "dino", "attribute": "cidx2", "K": 2048, "D": 1280,
+      "centers": "banks/vis_2048_centers.npy", "pca": "banks/vis_2048_pca.bin" },
+    { "name": "DINO 4096", "type": "dino", "attribute": "cidx3", "K": 4096, "D": 1280,
+      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
+    { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
+      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" },
+    { "name": "OpenSeg 512", "type": "clip", "attribute": "cidx5", "K": 512, "D": 768,
+  "clip_model": "Xenova/clip-vit-large-patch14",
+  "centers": "banks/openseg_512_centers.npy", "pca": "banks/openseg_512_pca.bin" },
+  { "name": "OpenSeg 1024", "type": "clip", "attribute": "cidx6", "K": 1024, "D": 768,
+  "clip_model": "Xenova/clip-vit-large-patch14",
+  "centers": "banks/openseg_1024_centers.npy", "pca": "banks/openseg_1024_pca.bin" },
+  { "name": "OpenSeg 2048", "type": "clip", "attribute": "cidx7", "K": 2048, "D": 768,
+  "clip_model": "Xenova/clip-vit-large-patch14",
+  "centers": "banks/openseg_2048_centers.npy", "pca": "banks/openseg_2048_pca.bin" },
+  { "name": "OpenSeg 4096", "type": "clip", "attribute": "cidx8", "K": 4096, "D": 768,
+  "clip_model": "Xenova/clip-vit-large-patch14",
+  "centers": "banks/openseg_4096_centers.npy", "pca": "banks/openseg_4096_pca.bin" },
+  { "name": "OpenSeg 8192", "type": "clip", "attribute": "cidx9", "K": 8192, "D": 768,
+  "clip_model": "Xenova/clip-vit-large-patch14",
+  "centers": "banks/openseg_8192_centers.npy", "pca": "banks/openseg_8192_pca.bin" }
+  ]
     },
     {
       "id": "wmcs",
@@ -87,26 +121,6 @@
       "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
     { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
       "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }]
-    },
-    {
-      "id": "usc",
-      "name": "USC",
-      "base": "https://huggingface.co/datasets/Ashkan126/q3dusc/resolve/main/usc",
-      "tiles": "tiles/metadata.json",
-      "n_points": 94694849,
-      "noise_sentinel": 65535,
-      "banks":  [
-    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
-      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
-    { "name": "DINO 1024", "type": "dino", "attribute": "cidx1", "K": 1024, "D": 1280,
-      "centers": "banks/vis_1024_centers.npy", "pca": "banks/vis_1024_pca.bin" },
-    { "name": "DINO 2048", "type": "dino", "attribute": "cidx2", "K": 2048, "D": 1280,
-      "centers": "banks/vis_2048_centers.npy", "pca": "banks/vis_2048_pca.bin" },
-    { "name": "DINO 4096", "type": "dino", "attribute": "cidx3", "K": 4096, "D": 1280,
-      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
-    { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
-      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }
-  ]
     },
     {
       "id": "paestum",
