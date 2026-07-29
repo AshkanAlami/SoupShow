@@ -140,6 +140,21 @@
       "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
     { "name": "DINO 8192", "type": "dino", "attribute": "cidx4", "K": 8192, "D": 1280,
       "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }]
+    },
+    {
+      "id": "milan",
+      "name": "Milan",
+      "base": "https://huggingface.co/datasets/Ashkan126/q3dmilan/resolve/main/milan",
+      "tiles": "tiles/metadata.json",
+      "n_points": 211334769,
+      "noise_sentinel": 65535,
+      "banks":  [
+    { "name": "DINO 512",  "type": "dino", "attribute": "cidx0", "K": 512,  "D": 1280,
+      "centers": "banks/vis_512_centers.npy",  "pca": "banks/vis_512_pca.bin" },
+    { "name": "DINO 4096", "type": "dino", "attribute": "cidx1", "K": 4096, "D": 1280,
+      "centers": "banks/vis_4096_centers.npy", "pca": "banks/vis_4096_pca.bin" },
+    { "name": "DINO 8192", "type": "dino", "attribute": "cidx2", "K": 8192, "D": 1280,
+      "centers": "banks/vis_8192_centers.npy", "pca": "banks/vis_8192_pca.bin" }]
     }
   ]
 }
