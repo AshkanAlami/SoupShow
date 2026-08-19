@@ -428,7 +428,7 @@
     {
       "id": "milan",
       "name": "Milan",
-      "base": "/data",
+      "base": "https://huggingface.co/datasets/Ashkan126/q3dmilan/resolve/main/milan",
       "tiles": "tiles/metadata.json",
       "n_points": 211334769,
       "noise_sentinel": 65535,
